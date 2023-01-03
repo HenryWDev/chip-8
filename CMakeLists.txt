@@ -60,6 +60,7 @@ add_definitions(
 
 add_executable(chip-8 
 	src/main.cpp
+	src/chip_emu.cpp
 	src/shader.cpp
 	src/shader.hpp
 	imgui/imgui.cpp

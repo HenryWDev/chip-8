@@ -19,8 +19,8 @@ using namespace glm;
 // #include "../imgui/imgui_impl"
 #include "../imgui/imgui_impl_glfw.h"
 #include "../imgui/imgui_impl_opengl3.h"
-bool show_demo_window = true;
-bool show_another_window = false;
+
+#include "chip8.h"
 
 static void glfw_error_callback(int error, const char* description)
 {
@@ -29,8 +29,17 @@ static void glfw_error_callback(int error, const char* description)
 
 
 
-int main( void )
+int main(int argc, char* argv[] )
 {
+
+    if (argc < 2){
+        printf("Program file path required, exiting...\n");
+        exit(1);
+    }
+    chip8 chip_8(argv[1]);
+
+
+
 	// Initialise GLFW
 	if( !glfwInit() )
 	{
@@ -67,7 +76,7 @@ int main( void )
     //glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);            // 3.0+ only
 #endif
 	// Create window with graphics context
-    GLFWwindow* window = glfwCreateWindow(1280, 720, "Dear ImGui GLFW+OpenGL3 example", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(1280, 720, "Chip-8", NULL, NULL);
     if (window == NULL)
         return 1;
 	glfwMakeContextCurrent(window);
@@ -87,6 +96,7 @@ int main( void )
 
 	ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
+	ImU32 color = ImColor(165,23,69);
 
 	// Main loop
     while (!glfwWindowShouldClose(window))
@@ -99,65 +109,15 @@ int main( void )
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-		// ImGui::ShowDemoWindow(&show_demo_window);
-
-		// 2. Show a simple window that we create ourselves. We use a Begin/End pair to create a named window.
-        {
-            static float f = 0.0f;
-            static int counter = 0;
-
-            ImGui::Begin("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
-
-            ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
-            ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
-            ImGui::Checkbox("Another Window", &show_another_window);
-
-            ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
-            ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
-
-            if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
-                counter++;
-            ImGui::SameLine();
-            ImGui::Text("counter = %d", counter);
-
-            ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-            ImGui::End();
-        }
-
-		if (show_another_window)
-        {
-            ImGui::Begin("Another Window", &show_another_window);   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
-            ImGui::Text("Hello from another window!");
-            if (ImGui::Button("Close Me"))
-                show_another_window = false;
-            ImGui::End();
-        }
-
-		ImGui::Begin( "Main" );
-		ImDrawList* draw_list = ImGui::GetWindowDrawList();
-		ImGui::Text( "(%.1f FPS)", ImGui::GetIO().Framerate );
-        const ImVec2 pos = ImGui::GetCursorScreenPos();
-		ImGui::End();
-
-
-		// glUseProgram(programID);
-		// glBindFramebuffer(GL_FRAMEBUFFER, 0);
-		// glViewport(0,0,1024,768); // Render on the whole framebuffer, complete from the lower left corner to the upper right
-
 		
-		// horizontal top
-		ImU32 color = ImColor(165,23,69);
-        draw_list->AddLine( ImVec2( pos.x, pos.y ), ImVec2( pos.x  *  6.0f, pos.y ), color, 1.0f );
-
-        // horizontal bottom
-        draw_list->AddLine( ImVec2( pos.x, pos.y  *  6.0f ), ImVec2( pos.x  *  6.0f, pos.y  *  6.0f ), color, 1.0f );
-
-        // vertical left
-        draw_list->AddLine( ImVec2( pos.x, pos.y ), ImVec2( pos.x, pos.y  *  6.0f ), color, 1.0f );
-
-        // vertical right
-        draw_list->AddLine( ImVec2( pos.x  *  6.0f, pos.y ), ImVec2( pos.x  *  6.0f, pos.y  *  6.0f ), color, 1.0f );
-        draw_list->AddRectFilled( ImVec2( pos.x  *  1.0f, pos.y *  1.0f ), ImVec2( pos.x *  1.5f , pos.y *  1.5f ), color);
+        
+		// declare and call render loop (most stuff happens here)
+		extern void render_loop( GLFWwindow * window, chip8* chip_8 );
+		render_loop(window, &chip_8);
+		
+		
+		
+        // ImGui::ShowDemoWindow();
 
 		// Rendering
         ImGui::Render();
