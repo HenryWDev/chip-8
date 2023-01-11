@@ -28,28 +28,19 @@ void render_loop( GLFWwindow* window, chip8* chip_8 ){
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
     const ImVec2 pos = ImGui::GetCursorScreenPos();
     int display[64][32];
-	for (int i = 0; i < 64; i++)
-	{
-		for (int j = 0; j < 32; j++)
-		{
-			display[i][j] = 255;
-		}
-	}
-	display[15][15] = 0;
+	// for (int i = 0; i < 64; i++)
+	// {
+	// 	for (int j = 0; j < 32; j++)
+	// 	{
+	// 		display[i][j] = 255;
+	// 	}
+	// }
+	// display[15][15] = 0;
+	chip_8->cycle(draw_list);
 
-
-    for (int i = 0; i < 64; i++ )
-		{
-			for (int j = 0; j < 32; j++ )
-			{
-
-				// draw_list->AddRectFilled( ImVec2( pos.x  *  1.0f, pos.y *  1.0f ), ImVec2( pos.x *  5.5f , pos.y *  5.5f ), color);
-
-				draw_list->AddRectFilled( ImVec2( (pos.x) + (i * pixel_size), (pos.y) +  (j * pixel_size) ),
-										  ImVec2( (pos.x) + (i * pixel_size) + pixel_size, (pos.y) +  (j * pixel_size)  + pixel_size), 
-										  ImColor(display[i][j],display[i][j],display[i][j]));
-			}
-		}
+	draw_list->AddRectFilled( ImVec2( (pos.x) + (1 * pixel_size), (pos.y) +  (1 * pixel_size) ),
+										  ImVec2( (pos.x) + (1 * pixel_size) + pixel_size, (pos.y) +  (1 * pixel_size)  + pixel_size), 
+										  ImColor(255,255,255));
 
 	ImGui::End();
 
