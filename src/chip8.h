@@ -25,6 +25,7 @@ class chip8{
         uint8_t display[64][32];
         int pixel_size = 10;
 
+
         void load_fonts(){
             int fonts[] = {
             0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
@@ -55,7 +56,9 @@ class chip8{
             
         }
 
+
         void debug_printout(uint16_t op, uint8_t X, uint8_t Y, uint8_t N, uint8_t NN, uint16_t NNN){
+
             printf("PC: %5d |", this->program_counter);
             printf("OP: %04x | X: %02x | Y: %02x | N: %02x | NN: %02x | NNN: %04x |\n",op, X, Y, N, NN, NNN);
 
@@ -66,7 +69,6 @@ class chip8{
             printf("idx: %4d | ", this->index_register);
             printf("\n");
             
-
         }
 
         void draw(uint8_t X, uint8_t Y, uint8_t  N){
@@ -139,7 +141,17 @@ class chip8{
         
 
     public:
-        
+        uint8_t* get_registers(){
+            return this->registers;
+        }
+
+        uint8_t get_index_register(){
+            return this->index_register;
+        }
+
+        int get_program_counter(){
+            return this->program_counter;
+        }
 
         chip8(char* filepath){
             printf("[+] emulator created\n");
@@ -149,7 +161,7 @@ class chip8{
      
         };
 
-        void cycle(ImDrawList* draw_list){
+        uint16_t cycle(ImDrawList* draw_list){
             // Fetch - Get current 2 byte instruction
 
             // combining two bytes to get the opcode - https://stackoverflow.com/questions/14733761/printf-formatting-for-hexadecimal
@@ -160,14 +172,14 @@ class chip8{
             // Decode / Execute
             uint8_t X = (op & 0x0f00) >> 8;             // second nibble
             uint8_t Y = (op & 0x00f0) >> 4;             // third nibble
-            uint8_t N = (op & 0x000f);             // fourth nibble
+            uint8_t N = (op & 0x000f);                  // fourth nibble
             uint8_t NN = (op & 0x00ff);                 // second byte
             uint16_t NNN = (op & 0x0fff) ;              // second, third and fourth nibbles
 
-            debug_printout(op, X,Y,N,NN,NNN);
+            // debug_printout(op, X,Y,N,NN,NNN);
 
             switch (op >> 12){
-                case 0x0:
+                case 0x0: // Clear screen
                     int display[64][32];
                     for (int i = 0; i < 64; i++)
                     {
@@ -179,56 +191,54 @@ class chip8{
                     
                     break;
 
-                case 0x1:
+                // http://devernay.free.fr/hacks/chip8/C8TECH10.HTM
+                case 0x1: // Jump
                     this->program_counter = NNN;
 
                     break;
                 
-                case 0x2:
+                case 0x2: // Call 
                     break;
 
-                case 0x3:
+                case 0x3: // Skip next instruction if Vx = NN.
                     break;
 
-                case 0x4:
+                case 0x4: // Skip next instruction if Vx != NN.
                     break;
 
-                case 0x5:
+                case 0x5: // Skip next instruction if Vx = Vy.
                     break;
 
-                case 0x6:
+                case 0x6: // Set Vx = NN.
                     this->registers[X] = NN;
 
                     break;
 
-                case 0x7:
+                case 0x7: // Set Vx = Vx + NN.
                     this->registers[X] += NN;
-
                     break;
 
-                case 0x8:
+                case 0x8: // Set Vx = Vy.
                     break;
 
-                case 0x9:
+                case 0x9: // Skip next instruction if Vx != Vy.
                     break;
 
-                case 0xA:
+                case 0xA: // Set I = nnn.
                     this->index_register = NNN;
-
                     break;
 
-                case 0xB:
+                case 0xB: // Jump to location nnn + V0.
                     break;
 
-                case 0xC:
+                case 0xC: // Set Vx = random byte AND nn.
                     break;
 
-                case 0xD:
+                case 0xD: // Display n-byte sprite starting at memory location I at (Vx, Vy), set VF = collision.
                     draw(X,Y,N);
-                    
                     break;
 
-                case 0xE:
+                case 0xE: // Skip next instruction if key with the value of Vx is pressed.
                     break;
 
                 case 0xF:
@@ -242,7 +252,7 @@ class chip8{
 
 
             int a = std::cin.get();
-            return;
+            return op;
         }
 
         void load_program(char* filepath){
