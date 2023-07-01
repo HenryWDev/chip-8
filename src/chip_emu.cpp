@@ -14,8 +14,6 @@
 #include "chip8.h"
 
 
-
-
 void render_loop( GLFWwindow* window, chip8* chip_8 ){
 	// setup game window
 	ImGui::SetNextWindowPos(ImVec2(0,0));
@@ -68,7 +66,7 @@ void render_loop( GLFWwindow* window, chip8* chip_8 ){
 	// ImGui::End();
 
 	ImGui::SetNextWindowPos(ImVec2(0,380));
-	ImGui::SetNextWindowSize(ImVec2(660,250));
+	ImGui::SetNextWindowSize(ImVec2(660,120));
 	ImGui::Begin( "Registers" );
 	uint8_t* registers = chip_8->get_registers();
 	if (ImGui::BeginTable("table1", 4))
@@ -85,6 +83,12 @@ void render_loop( GLFWwindow* window, chip8* chip_8 ){
 		}
 		ImGui::EndTable();
 	}
+	ImGui::End();
+
+
+	ImGui::SetNextWindowPos(ImVec2(0,500));
+	ImGui::SetNextWindowSize(ImVec2(150,200));
+	ImGui::Begin( "Instruction" );
 	ImGui::Text("Op:   %02x", op >> 12);
 	ImGui::Text("X:    %02x", (op & 0x0f00) >> 8);
 	ImGui::Text("Y:    %02x", (op & 0x00f0) >> 4);
@@ -93,8 +97,23 @@ void render_loop( GLFWwindow* window, chip8* chip_8 ){
 	ImGui::Text("NNN:  %04x", (op & 0x0fff));
 	ImGui::Text("PC:   %04x", chip_8->get_program_counter());
 	ImGui::Text("IDX:  %04x", chip_8->get_index_register());
-
-
 	ImGui::End();
-        
+
+	ImGui::SetNextWindowPos(ImVec2(660,0));
+	ImGui::SetNextWindowSize(ImVec2(100,350));
+	ImGui::Begin( "Stack" );
+	uint16_t* stack = chip_8->get_stack();
+	uint8_t stack_pointer = chip_8->get_stack_pointer();
+
+
+	for (int i = 0; i <= 16; i++)
+	{
+		if (i == stack_pointer){
+			ImGui::Text("%04x<---", stack[i]);
+		}
+		else {
+			ImGui::Text("%04x", stack[i]);
+		}		
+	}
+	ImGui::End();
 }

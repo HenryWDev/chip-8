@@ -15,7 +15,8 @@
 
 class chip8{
     private:
-        uint8_t stack[16];
+        uint16_t stack[16];
+        int stack_pointer = -1;
         int program_counter = 512;
         uint8_t index_register;
         uint8_t registers[16];
@@ -54,6 +55,13 @@ class chip8{
                 counter++;
             }
             
+        }
+
+        void print_stack(){
+            for (int i = 0; i < 16; i++)
+            {
+                printf("stack %d: %04x", i, this->stack[i]);
+            }
         }
 
 
@@ -152,12 +160,27 @@ class chip8{
         int get_program_counter(){
             return this->program_counter;
         }
+        
+        uint16_t* get_stack(){
+            return this->stack;
+        }
+
+        int get_stack_pointer(){
+            return this->stack_pointer;
+        }
 
         chip8(char* filepath){
             printf("[+] emulator created\n");
             load_program(filepath);
             load_fonts();
             print_memory();
+            for (int i = 0; i < 64; i++)
+            {
+                for (int j = 0; j < 32; j++)
+                {
+                    this->display[i][j] = 255;
+                }
+            }
      
         };
 
@@ -177,16 +200,23 @@ class chip8{
             uint16_t NNN = (op & 0x0fff) ;              // second, third and fourth nibbles
 
             // debug_printout(op, X,Y,N,NN,NNN);
+            // print_stack();
 
             switch (op >> 12){
-                case 0x0: // Clear screen
-                    int display[64][32];
-                    for (int i = 0; i < 64; i++)
-                    {
-                        for (int j = 0; j < 32; j++)
+                case 0x0: // Clear screen / return
+                    if (NN == 0xe0){
+                        for (int i = 0; i < 64; i++)
                         {
-                            this->display[i][j] = 255;
+                            for (int j = 0; j < 32; j++)
+                            {
+                                this->display[i][j] = 255;
+                            }
                         }
+                    }
+                    if (NN == 0xee){
+                        this->program_counter = this->stack[this->stack_pointer];
+                        this->stack[this->stack_pointer] = 0;
+                        this->stack_pointer -= 1;
                     }
                     
                     break;
@@ -198,15 +228,27 @@ class chip8{
                     break;
                 
                 case 0x2: // Call 
+                    this->stack_pointer += 1;
+                    this->stack[this->stack_pointer] = this->program_counter;
+                    this->program_counter = NNN;
                     break;
 
                 case 0x3: // Skip next instruction if Vx = NN.
+                    if (this->registers[X] == NN){
+                        this->program_counter += 2;
+                    }
                     break;
 
                 case 0x4: // Skip next instruction if Vx != NN.
+                    if (this->registers[X] != NN){
+                        this->program_counter += 2;
+                    }
                     break;
 
                 case 0x5: // Skip next instruction if Vx = Vy.
+                    if (this->registers[X] == this->registers[Y]){
+                        this->program_counter += 2;
+                    }
                     break;
 
                 case 0x6: // Set Vx = NN.
@@ -219,9 +261,14 @@ class chip8{
                     break;
 
                 case 0x8: // Set Vx = Vy.
+                    // TODO: not done
+                    this->registers[X] = this->registers[Y];
                     break;
 
                 case 0x9: // Skip next instruction if Vx != Vy.
+                    if (this->registers[X] != this->registers[Y]){
+                        this->program_counter += 2;
+                    }
                     break;
 
                 case 0xA: // Set I = nnn.
@@ -229,16 +276,18 @@ class chip8{
                     break;
 
                 case 0xB: // Jump to location nnn + V0.
+                    this->program_counter = NNN + this->registers[0];
                     break;
 
                 case 0xC: // Set Vx = random byte AND nn.
+                    this->registers[X] = rand() && NN;
                     break;
 
                 case 0xD: // Display n-byte sprite starting at memory location I at (Vx, Vy), set VF = collision.
                     draw(X,Y,N);
                     break;
 
-                case 0xE: // Skip next instruction if key with the value of Vx is pressed.
+                case 0xE:
                     break;
 
                 case 0xF:
@@ -251,7 +300,7 @@ class chip8{
             render(draw_list);
 
 
-            int a = std::cin.get();
+            // int a = std::cin.get();
             return op;
         }
 
@@ -269,7 +318,6 @@ class chip8{
             fin.read(reinterpret_cast<char*>(&memory[512]), 3896);
             printf("[!] %ld bytes read\n", fin.gcount());
             printf("[+] Successfuly read program\n");
-            
             
         }
 
