@@ -6,6 +6,7 @@
 #include <ios>
 #include <iomanip>
 #include <iostream>
+#include <bitset>
 
 // A2DD.h
 #ifndef chip8_H
@@ -84,13 +85,11 @@ class chip8{
             int y_coord = this->registers[Y] % 32;
             this->registers[0xF] = 0;
 
-            printf("drawing..., start at %d, %d\n", X_coord, y_coord);
 
             for (int byte_shift = 0; byte_shift < N; byte_shift++) // for N bytes of sprite data
             {
                 uint16_t op = ((uint16_t)this->memory[this->program_counter] << 8 | this->memory[this->program_counter+1]);
                 uint8_t sprite_data = this->memory[this->index_register + byte_shift + 512];
-                printf("%02x ", sprite_data);
 
                 for (int bit_shift = 0; bit_shift < 8; bit_shift++)
                 {
@@ -99,7 +98,6 @@ class chip8{
                     }
 
                     int bit = (sprite_data >> (7-bit_shift)) % 2;
-                    printf("%d", bit);
                     // If the current pixel in the sprite row is on and the pixel at coordinates X,Y on the screen is also on,
                     // turn off the pixel and set VF to 1
                     if (bit == 1 && this->display[X_coord][y_coord] != 0){
@@ -115,7 +113,6 @@ class chip8{
 
                     X_coord++;
                 }
-                printf("\n");
                 if(y_coord == 31){
                         break;
                 }
@@ -173,7 +170,6 @@ class chip8{
             printf("[+] emulator created\n");
             load_program(filepath);
             load_fonts();
-            print_memory();
             for (int i = 0; i < 64; i++)
             {
                 for (int j = 0; j < 32; j++)
@@ -260,9 +256,51 @@ class chip8{
                     this->registers[X] += NN;
                     break;
 
-                case 0x8: // Set Vx = Vy.
-                    // TODO: not done
-                    this->registers[X] = this->registers[Y];
+                case 0x8: 
+                    printf("%d\n", N);
+                    switch (N){
+                        case 0x0: // Set Vx = Vy
+                            this->registers[X] = this->registers[Y];
+                            break;
+
+                        case 0x1: // Binary OR
+                            this->registers[X] = this->registers[X] | this->registers[Y];
+                            break;
+                        
+                        case 0x2: // Binary AND
+                            this->registers[X] = this->registers[X] & this->registers[Y];
+                            break;
+
+                        case 0x3: // Logical XOR
+                            this->registers[X] = this->registers[X] ^ this->registers[Y];
+                            break; 
+
+                        case 0x4: // Add
+                            this->registers[X] = this->registers[X] + this->registers[Y];
+                            break; // finish this
+
+                        case 0x5: // Subtract
+                            if (this->registers[X] > this->registers[Y]){
+                                this->registers[0xF] = 1;
+                            }
+                            else{
+                                this->registers[0xF] = 0;
+                            }
+                            this->registers[X] = this->registers[X] - this->registers[Y];
+                            break;
+
+                        case 0x7: // Subtract
+
+                            break;
+
+                        case 0x6: // Shift
+
+                            break;
+
+                        case 0xE: // Shift
+
+                            break;
+                    }
                     break;
 
                 case 0x9: // Skip next instruction if Vx != Vy.
