@@ -17,6 +17,7 @@
 class chip8{
     private:
         uint16_t stack[16];
+        char* input_pressed[16];
         int stack_pointer = -1;
         int program_counter = 512;
         uint8_t index_register;
@@ -51,7 +52,6 @@ class chip8{
             int counter = 80;
             for (int i : fonts)
             {
-                printf("%d\n", i);
                 this->memory[counter] = i;
                 counter++;
             }
@@ -123,7 +123,6 @@ class chip8{
         }
 
         void render(ImDrawList* draw_list){
-
 
             const ImVec2 pos = ImGui::GetCursorScreenPos();
             for (int i = 0; i < 64; i++ )
@@ -198,6 +197,8 @@ class chip8{
             // debug_printout(op, X,Y,N,NN,NNN);
             // print_stack();
 
+
+
             switch (op >> 12){
                 case 0x0: // Clear screen / return
                     if (NN == 0xe0){
@@ -257,7 +258,7 @@ class chip8{
                     break;
 
                 case 0x8: 
-                    printf("%d\n", N);
+                    // printf("%d\n", N);
                     switch (N){
                         case 0x0: // Set Vx = Vy
                             this->registers[X] = this->registers[Y];
@@ -290,15 +291,35 @@ class chip8{
                             break;
 
                         case 0x7: // Subtract
-
+                            if (this->registers[X] > this->registers[Y]){
+                                this->registers[0xF] = 1;
+                            }
+                            else{
+                                this->registers[0xF] = 0;
+                            }
+                            this->registers[X] = this->registers[Y] - this->registers[X];
                             break;
 
                         case 0x6: // Shift
-
+                            
+                            if ((this->registers[X] & (1 << 8)) >> 8 == 1){
+                                this->registers[0xF] = 1;
+                            }
+                            else{
+                                this->registers[0xF] = 0;
+                            }
+                            this->registers[X] = this->registers[X] >> 1;
                             break;
 
                         case 0xE: // Shift
-
+                            
+                            if ((this->registers[X] & (1 << 8)) >> 8 == 1){
+                                this->registers[0xF] = 1;
+                            }
+                            else{
+                                this->registers[0xF] = 0;
+                            }
+                            this->registers[X] = this->registers[X] << 1;
                             break;
                     }
                     break;
@@ -326,6 +347,23 @@ class chip8{
                     break;
 
                 case 0xE:
+                    switch(NN){
+                        case 0x9E:
+                            
+                            printf("Ex9E");
+                            if(1==1) {
+                                this->program_counter += 2;
+                            }
+                            break;
+
+                        case 0xA1:
+                            printf("ExA1");
+                            if (1==1) {
+                                this->program_counter += 2;
+                            }
+                            break;
+
+                    }
                     break;
 
                 case 0xF:
@@ -336,7 +374,7 @@ class chip8{
                  
             }
             render(draw_list);
-
+            
 
             // int a = std::cin.get();
             return op;
@@ -371,6 +409,10 @@ class chip8{
                 }
             }
             std::cout << std::endl;
+        }
+        
+        void input(char* input){
+            std::cout << input << std::endl;
         }
 
 

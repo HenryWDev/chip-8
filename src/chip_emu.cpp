@@ -14,56 +14,53 @@
 #include "chip8.h"
 
 
-void render_loop( GLFWwindow* window, chip8* chip_8 ){
+void render_loop( GLFWwindow* window, chip8* chip_8){
 	// setup game window
 	ImGui::SetNextWindowPos(ImVec2(0,0));
 	ImGui::SetNextWindowSize(ImVec2(660,380));
 	bool is_open = NULL; // ensure we cant close the window
 	ImGui::Begin( "Display", &is_open, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse);
 	
-	ImGui::Text( "(%.1f FPS)", ImGui::GetIO().Framerate );
-
-    int pixel_size = 10;
+	
     ImDrawList* draw_list = ImGui::GetWindowDrawList();
-    const ImVec2 pos = ImGui::GetCursorScreenPos();
-    int display[64][32];
-	for (int i = 0; i < 64; i++)
-	{
-		for (int j = 0; j < 32; j++)
-		{
-			display[i][j] = 255;
-		}
-	}
-	display[15][15] = 0;
-	uint16_t op = chip_8->cycle(draw_list);
 
-	draw_list->AddRectFilled( ImVec2( (pos.x) + (1 * pixel_size), (pos.y) +  (1 * pixel_size) ),
-										  ImVec2( (pos.x) + (1 * pixel_size) + pixel_size, (pos.y) +  (1 * pixel_size)  + pixel_size), 
-										  ImColor(255,255,255));
+    const ImVec2 pos = ImGui::GetCursorScreenPos();
+
+	uint16_t op = chip_8->cycle(draw_list);
 
 	ImGui::End();
 
-	// ImGui::SetNextWindowPos(ImVec2(660,0));
-	// ImGui::SetNextWindowSize(ImVec2(200,200));
-	// ImGui::Begin( "Gamepad" );
-	// ImGui::BeginTable("table_padding", 3);
-	// for (int row = 0; row < 3; row++)
-	// {
-	// 	ImGui::TableNextRow();
-	// 	for (int column = 0; column < 3; column++)
-	// 	{
-	// 		ImGui::TableSetColumnIndex(column);
+	ImGui::SetNextWindowPos(ImVec2(780,0));
+	ImGui::SetNextWindowSize(ImVec2(200,200));
+	ImGui::Begin( "Gamepad" );
+	ImGui::Text( "(%.1f FPS)", ImGui::GetIO().Framerate );
 
-	// 			char buf[32];
-	// 			sprintf(buf, "A");
-	// 			ImGui::Button(buf, ImVec2(-FLT_MIN, 0.0f));
+	char* layout[] = {"1","2","3","C",
+					 "4","5","6","D",
+					 "7","8","9","E",
+					 "A","0","B","F"
+					};
+
+	ImGui::BeginTable("table_padding", 4);
+	for (int row = 0; row < 4; row++)
+	{
+		ImGui::TableNextRow();
+		for (int column = 0; column < 4; column++)
+		{
+			ImGui::TableSetColumnIndex(column);
+
+				if (ImGui::Button(layout[(row*4)+column])){
+					chip_8->input(layout[(row*4)+column]);
+				}
+				
 			
-	// 		//if (ImGui::TableGetColumnFlags() & ImGuiTableColumnFlags_IsHovered)
-	// 		//    ImGui::TableSetBgColor(ImGuiTableBgTarget_CellBg, IM_COL32(0, 100, 0, 255));
-	// 	}
-	// }
-	// ImGui::EndTable();
-	// ImGui::End();
+			if (ImGui::TableGetColumnFlags() & ImGuiTableColumnFlags_IsHovered)
+			   ImGui::TableSetBgColor(ImGuiTableBgTarget_CellBg, IM_COL32(0, 100, 0, 255));
+		}
+	}
+	ImGui::EndTable();
+	ImGui::End();
+
 
 	ImGui::SetNextWindowPos(ImVec2(0,380));
 	ImGui::SetNextWindowSize(ImVec2(660,120));

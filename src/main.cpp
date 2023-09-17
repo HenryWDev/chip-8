@@ -96,26 +96,22 @@ int main(int argc, char* argv[] )
 
 	ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
-	ImU32 color = ImColor(165,23,69);
-
 	// Main loop
     while (!glfwWindowShouldClose(window))
     {
 		// Poll and handle events (inputs, window resize, etc.)
 		glfwPollEvents();
 
+
 		// Start the Dear ImGui frame
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-		
         
 		// declare and call render loop (most stuff happens here)
-		extern void render_loop( GLFWwindow * window, chip8* chip_8 );
+		extern void render_loop( GLFWwindow* window, chip8* chip_8 );
 		render_loop(window, &chip_8);
-		
-		
 		
         // ImGui::ShowDemoWindow();
 
