@@ -35,10 +35,10 @@ void render_loop( GLFWwindow* window, chip8* chip_8){
 	ImGui::Begin( "Gamepad" );
 	ImGui::Text( "(%.1f FPS)", ImGui::GetIO().Framerate );
 
-	char* layout[] = {"1","2","3","C",
-					 "4","5","6","D",
-					 "7","8","9","E",
-					 "A","0","B","F"
+	int layout[] = {0x1,0x2,0x3,0xC,
+					0x4,0x5,0x6,0xD,
+					0x7,0x8,0x9,0xE,
+					0xA,0x0,0xB,0xF
 					};
 
 	ImGui::BeginTable("table_padding", 4);
@@ -48,9 +48,15 @@ void render_loop( GLFWwindow* window, chip8* chip_8){
 		for (int column = 0; column < 4; column++)
 		{
 			ImGui::TableSetColumnIndex(column);
+				std::stringstream sstream;
+				sstream << std::hex << layout[(row*4)+column];
+				std::string result = sstream.str();
 
-				if (ImGui::Button(layout[(row*4)+column])){
-					chip_8->input(layout[(row*4)+column]);
+				if (chip_8->check_if_input_pressed(layout[(row*4)+column])){
+					ImGui::TextColored(ImVec4(1.0f, 0.0f, 1.0f, 1.0f), sstream.str().c_str());
+				}
+				else{
+					ImGui::TextColored(ImVec4(1.0f, 1.0f, 1.0f, 1.0f), sstream.str().c_str());
 				}
 				
 			

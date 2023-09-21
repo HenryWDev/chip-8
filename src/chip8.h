@@ -8,6 +8,7 @@
 #include <iostream>
 #include <bitset>
 
+
 // A2DD.h
 #ifndef chip8_H
 #define chip8_H
@@ -17,15 +18,16 @@
 class chip8{
     private:
         uint16_t stack[16];
-        char* input_pressed[16];
+        uint8_t input_pressed[0xf];
         int stack_pointer = -1;
         int program_counter = 512;
         uint8_t index_register;
         uint8_t registers[16];
         uint8_t memory[4096];
-        uint8_t delay_timer;
-        uint8_t sound_timer;
+        uint8_t delay_timer = 0;
+        uint8_t sound_timer = 0;
         uint8_t display[64][32];
+        
         int pixel_size = 10;
 
 
@@ -197,7 +199,7 @@ class chip8{
             // debug_printout(op, X,Y,N,NN,NNN);
             // print_stack();
 
-
+            handle_input();
 
             switch (op >> 12){
                 case 0x0: // Clear screen / return
@@ -278,7 +280,7 @@ class chip8{
 
                         case 0x4: // Add
                             this->registers[X] = this->registers[X] + this->registers[Y];
-                            break; // finish this
+                            break; // finish this: does not handle overflow
 
                         case 0x5: // Subtract
                             if (this->registers[X] > this->registers[Y]){
@@ -350,23 +352,103 @@ class chip8{
                     switch(NN){
                         case 0x9E:
                             
-                            printf("Ex9E");
-                            if(1==1) {
+                            printf("Ex9E\n");
+                            
+                            if(check_if_input_pressed(X)) {
                                 this->program_counter += 2;
                             }
                             break;
 
                         case 0xA1:
-                            printf("ExA1");
-                            if (1==1) {
+                            printf("ExA1\n");
+                            if (!(check_if_input_pressed(X))) {
                                 this->program_counter += 2;
                             }
                             break;
 
+                    default:
+                        printf("unrecognised 0xE NN \n");
                     }
-                    break;
 
                 case 0xF:
+                    switch(NN){
+                        case 0x07:
+                        {
+                            printf("FX07\n");
+                            this->registers[X] = this->delay_timer;
+                            break;
+                        }
+                        case 0x15:
+                        {
+                            printf("FX15\n");
+                            this->delay_timer = this->registers[X];
+                            break;
+                        }
+                        case 0x18:
+                        {
+                            printf("FX18\n");
+                            this->sound_timer = this->registers[X];
+                            break;
+                        }
+
+                        case 0x1E:
+                        {
+                            printf("FX1E\n");
+                            this->index_register == this->index_register + this->registers[X];
+                            // finish this: does not handle overflow
+                            break;
+                            }
+
+                        case 0x0A:
+                        {
+                            printf("FX0A\n");
+                            bool input_found = false;
+                            for (int i = 0; i < 0xf; i++)
+                            {
+                                if (this->input_pressed[i]){
+                                    input_found = true;
+                                    this->registers[X] = i;
+                                }
+                                else{
+                                    this->program_counter -= 2;
+                                }
+                            }
+                            break;
+                        }
+
+                        case 0x29:
+                        {
+                            printf("FX28\n");
+                            this->index_register = 80+(5*this->registers[X]);
+                            break;
+                        }
+
+                        case 0x33:
+                            printf("FX33\n");
+                            this->memory[this->index_register] = this->registers[X] / 100;
+                            this->memory[this->index_register + 1] = (this->registers[X] / 10) % 10;
+                            this->memory[this->index_register + 2] = this->registers[X] % 10;
+                            break;
+
+                        case 0x55:
+                            printf("Fx55\n");
+                            for (int i = 0; i < 0xf; i++)
+                            {
+                                this->memory[this->index_register + i] = this->registers[i];
+                            }
+                            break;
+
+                        case 0x65:
+                            printf("Fx55\n");
+                            for (int i = 0; i < 0xf; i++)
+                            {
+                                this->registers[i] = this->memory[this->index_register + i];
+                            }
+                            break;
+
+                    default:
+                        printf("unrecognised 0xF NN \n");
+                    }
                     break;
 
                 default:
@@ -375,6 +457,19 @@ class chip8{
             }
             render(draw_list);
             
+
+            if (delay_timer > 0)
+            {
+                std::cout << delay_timer << std::endl;
+                delay_timer--;
+            }
+
+            if (sound_timer > 0)
+            {
+                std::cout << sound_timer << std::endl;
+                std::cout << "Beep!" << std::endl;
+                sound_timer--;
+            }
 
             // int a = std::cin.get();
             return op;
@@ -411,8 +506,30 @@ class chip8{
             std::cout << std::endl;
         }
         
-        void input(char* input){
-            std::cout << input << std::endl;
+        void handle_input(){
+            this->input_pressed[0x1] =  ImGui::IsKeyDown(ImGuiKey_1);
+            this->input_pressed[0x2] =  ImGui::IsKeyDown(ImGuiKey_2);
+            this->input_pressed[0x3] =  ImGui::IsKeyDown(ImGuiKey_3);
+            this->input_pressed[0xC] =  ImGui::IsKeyDown(ImGuiKey_4);
+
+            this->input_pressed[0x4] =  ImGui::IsKeyDown(ImGuiKey_Q);
+            this->input_pressed[0x5] =  ImGui::IsKeyDown(ImGuiKey_W);
+            this->input_pressed[0x6] =  ImGui::IsKeyDown(ImGuiKey_E);
+            this->input_pressed[0xD] =  ImGui::IsKeyDown(ImGuiKey_R);
+
+            this->input_pressed[0x7] =  ImGui::IsKeyDown(ImGuiKey_A);
+            this->input_pressed[0x8] =  ImGui::IsKeyDown(ImGuiKey_S);
+            this->input_pressed[0x9] =  ImGui::IsKeyDown(ImGuiKey_D);
+            this->input_pressed[0xE] =  ImGui::IsKeyDown(ImGuiKey_F);
+
+            this->input_pressed[0xA] =  ImGui::IsKeyDown(ImGuiKey_Z);
+            this->input_pressed[0x0] =  ImGui::IsKeyDown(ImGuiKey_X);
+            this->input_pressed[0xB] =  ImGui::IsKeyDown(ImGuiKey_C);
+            this->input_pressed[0xF] =  ImGui::IsKeyDown(ImGuiKey_V);
+        }
+
+        bool check_if_input_pressed(uint8_t pos){
+            return this->input_pressed[pos];
         }
 
 

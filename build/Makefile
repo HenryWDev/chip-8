@@ -771,6 +771,30 @@ imgui/imgui_widgets.cpp.s:
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/chip-8.dir/build.make CMakeFiles/chip-8.dir/imgui/imgui_widgets.cpp.s
 .PHONY : imgui/imgui_widgets.cpp.s
 
+src/chip_emu.o: src/chip_emu.cpp.o
+.PHONY : src/chip_emu.o
+
+# target to build an object file
+src/chip_emu.cpp.o:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/chip-8.dir/build.make CMakeFiles/chip-8.dir/src/chip_emu.cpp.o
+.PHONY : src/chip_emu.cpp.o
+
+src/chip_emu.i: src/chip_emu.cpp.i
+.PHONY : src/chip_emu.i
+
+# target to preprocess a source file
+src/chip_emu.cpp.i:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/chip-8.dir/build.make CMakeFiles/chip-8.dir/src/chip_emu.cpp.i
+.PHONY : src/chip_emu.cpp.i
+
+src/chip_emu.s: src/chip_emu.cpp.s
+.PHONY : src/chip_emu.s
+
+# target to generate assembly for a file
+src/chip_emu.cpp.s:
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/chip-8.dir/build.make CMakeFiles/chip-8.dir/src/chip_emu.cpp.s
+.PHONY : src/chip_emu.cpp.s
+
 src/main.o: src/main.cpp.o
 .PHONY : src/main.o
 
@@ -886,6 +910,9 @@ help:
 	@echo "... imgui/imgui_widgets.o"
 	@echo "... imgui/imgui_widgets.i"
 	@echo "... imgui/imgui_widgets.s"
+	@echo "... src/chip_emu.o"
+	@echo "... src/chip_emu.i"
+	@echo "... src/chip_emu.s"
 	@echo "... src/main.o"
 	@echo "... src/main.i"
 	@echo "... src/main.s"
