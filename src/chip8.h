@@ -21,7 +21,7 @@ class chip8{
         uint8_t input_pressed[0xf];
         int stack_pointer = -1;
         int program_counter = 512;
-        uint8_t index_register;
+        uint16_t index_register;
         uint8_t registers[16];
         uint8_t memory[4096];
         uint8_t delay_timer = 0;
@@ -90,8 +90,8 @@ class chip8{
 
             for (int byte_shift = 0; byte_shift < N; byte_shift++) // for N bytes of sprite data
             {
-                uint16_t op = ((uint16_t)this->memory[this->program_counter] << 8 | this->memory[this->program_counter+1]);
-                uint8_t sprite_data = this->memory[this->index_register + byte_shift + 512];
+                uint8_t sprite_data = this->memory[this->index_register + byte_shift];
+                printf("%02x \n", this->memory[this->index_register + byte_shift]);
 
                 for (int bit_shift = 0; bit_shift < 8; bit_shift++)
                 {
@@ -167,6 +167,10 @@ class chip8{
             return this->stack_pointer;
         }
 
+        uint16_t get_relative_instruction(int pos){
+            return ((uint16_t)this->memory[this->program_counter + pos] << 8 | this->memory[this->program_counter+1 + pos]);
+        }
+
         chip8(char* filepath){
             printf("[+] emulator created\n");
             load_program(filepath);
@@ -204,6 +208,7 @@ class chip8{
             switch (op >> 12){
                 case 0x0: // Clear screen / return
                     if (NN == 0xe0){
+                        printf("clear screen\n");
                         for (int i = 0; i < 64; i++)
                         {
                             for (int j = 0; j < 32; j++)
@@ -334,6 +339,7 @@ class chip8{
 
                 case 0xA: // Set I = nnn.
                     this->index_register = NNN;
+                    printf("idx set to %03x, %03x\n", this->index_register, NNN);
                     break;
 
                 case 0xB: // Jump to location nnn + V0.
@@ -367,7 +373,7 @@ class chip8{
                             break;
 
                     default:
-                        printf("unrecognised 0xE NN \n");
+                        printf("unrecognised 0xE %04x \n", NN);
                     }
 
                 case 0xF:
@@ -394,8 +400,12 @@ class chip8{
                         case 0x1E:
                         {
                             printf("FX1E\n");
-                            this->index_register == this->index_register + this->registers[X];
-                            // finish this: does not handle overflow
+                            if(this->index_register + this->registers[X] > 0xFFF)
+                                this->registers[0xF] = 1;
+                            else
+                                this->registers[0xF] = 0;
+                            this->index_register += this->registers[X];
+                            printf("set idx to %04x, %04x", this->index_register, this->registers[X]);
                             break;
                             }
 
@@ -406,13 +416,13 @@ class chip8{
                             for (int i = 0; i < 0xf; i++)
                             {
                                 if (this->input_pressed[i]){
+                                    printf("%d found\n", i);
                                     input_found = true;
                                     this->registers[X] = i;
-                                }
-                                else{
-                                    this->program_counter -= 2;
-                                }
+                                }                                
                             }
+                            if (!(input_found))
+                                this->program_counter -= 2;
                             break;
                         }
 
@@ -432,7 +442,7 @@ class chip8{
 
                         case 0x55:
                             printf("Fx55\n");
-                            for (int i = 0; i < 0xf; i++)
+                            for (int i = 0; i < X; i++)
                             {
                                 this->memory[this->index_register + i] = this->registers[i];
                             }
@@ -440,14 +450,14 @@ class chip8{
 
                         case 0x65:
                             printf("Fx55\n");
-                            for (int i = 0; i < 0xf; i++)
+                            for (int i = 0; i < X; i++)
                             {
                                 this->registers[i] = this->memory[this->index_register + i];
                             }
                             break;
 
                     default:
-                        printf("unrecognised 0xF NN \n");
+                        printf("unrecognised 0xF %04x \n", NN);
                     }
                     break;
 

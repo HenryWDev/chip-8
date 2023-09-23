@@ -102,6 +102,19 @@ void render_loop( GLFWwindow* window, chip8* chip_8){
 	ImGui::Text("IDX:  %04x", chip_8->get_index_register());
 	ImGui::End();
 
+	ImGui::SetNextWindowPos(ImVec2(150,500));
+	ImGui::SetNextWindowSize(ImVec2(150,200));
+	ImGui::Begin( "OP's" );
+	ImGui::Text("-2:  %04x", chip_8->get_relative_instruction(-4));
+	ImGui::Text("-1:  %04x", chip_8->get_relative_instruction(-2));
+	ImGui::Text(" 0:  %04x", chip_8->get_relative_instruction(0));
+	ImGui::Text("+1:  %04x", chip_8->get_relative_instruction(2));
+	ImGui::Text("+2:  %04x", chip_8->get_relative_instruction(4));
+	ImGui::Text("+3:  %04x", chip_8->get_relative_instruction(6));
+	ImGui::Text("+4:  %04x", chip_8->get_relative_instruction(8));
+	ImGui::Text("+5:  %04x", chip_8->get_relative_instruction(10));
+	ImGui::End();
+
 	ImGui::SetNextWindowPos(ImVec2(660,0));
 	ImGui::SetNextWindowSize(ImVec2(100,350));
 	ImGui::Begin( "Stack" );
