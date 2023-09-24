@@ -20,6 +20,7 @@ class chip8{
         uint16_t stack[16];
         uint8_t input_pressed[0xf];
         int stack_pointer = -1;
+        char op_info[100];
         int program_counter = 512;
         uint16_t index_register;
         uint8_t registers[16];
@@ -87,15 +88,14 @@ class chip8{
             int y_coord = this->registers[Y] % 32;
             this->registers[0xF] = 0;
 
-
+            printf("draw, %d %d %d", X, Y, N);
             for (int byte_shift = 0; byte_shift < N; byte_shift++) // for N bytes of sprite data
             {
                 uint8_t sprite_data = this->memory[this->index_register + byte_shift];
-                printf("%02x \n", this->memory[this->index_register + byte_shift]);
 
                 for (int bit_shift = 0; bit_shift < 8; bit_shift++)
                 {
-                    if(X_coord == 63){
+                    if(X_coord == 63 || y_coord == 31){
                         break;
                     }
 
@@ -115,9 +115,9 @@ class chip8{
 
                     X_coord++;
                 }
-                if(y_coord == 31){
-                        break;
-                }
+                // if(y_coord == 31){
+                //         break;
+                // }
                 y_coord++;
                 X_coord -= 8;
             
@@ -168,7 +168,11 @@ class chip8{
         }
 
         uint16_t get_relative_instruction(int pos){
-            return ((uint16_t)this->memory[this->program_counter + pos] << 8 | this->memory[this->program_counter+1 + pos]);
+            return ((uint16_t)this->memory[this->program_counter + pos - 2] << 8 | this->memory[this->program_counter+1 + pos - 2]);
+        }
+
+        char* get_op_info(){
+            return this->op_info;
         }
 
         chip8(char* filepath){
@@ -204,6 +208,7 @@ class chip8{
             // print_stack();
 
             handle_input();
+            sprintf(this->op_info, "Not implemented");
 
             switch (op >> 12){
                 case 0x0: // Clear screen / return
@@ -216,11 +221,13 @@ class chip8{
                                 this->display[i][j] = 255;
                             }
                         }
+                        sprintf(this->op_info, "clear display");
                     }
                     if (NN == 0xee){
                         this->program_counter = this->stack[this->stack_pointer];
                         this->stack[this->stack_pointer] = 0;
                         this->stack_pointer -= 1;
+                        sprintf(this->op_info, "return");
                     }
                     
                     break;
@@ -228,40 +235,46 @@ class chip8{
                 // http://devernay.free.fr/hacks/chip8/C8TECH10.HTM
                 case 0x1: // Jump
                     this->program_counter = NNN;
-
+                    std::cout << this->op_info << std::endl;
+                    sprintf(this->op_info, "jump to %03x", NNN);
                     break;
                 
                 case 0x2: // Call 
                     this->stack_pointer += 1;
                     this->stack[this->stack_pointer] = this->program_counter;
                     this->program_counter = NNN;
+                    sprintf(this->op_info, "call %03x", NNN);
                     break;
 
                 case 0x3: // Skip next instruction if Vx = NN.
                     if (this->registers[X] == NN){
                         this->program_counter += 2;
                     }
+                    sprintf(this->op_info, "skip next if %02x == %02x",this->registers[X], NN);
                     break;
 
                 case 0x4: // Skip next instruction if Vx != NN.
                     if (this->registers[X] != NN){
                         this->program_counter += 2;
                     }
+                    sprintf(this->op_info, "skip next if %02x != %02x",this->registers[X], NN);
                     break;
 
                 case 0x5: // Skip next instruction if Vx = Vy.
                     if (this->registers[X] == this->registers[Y]){
                         this->program_counter += 2;
                     }
+                    sprintf(this->op_info, "skip next if %02x == %02x",this->registers[X], this->registers[Y]);
                     break;
 
                 case 0x6: // Set Vx = NN.
                     this->registers[X] = NN;
-
+                    sprintf(this->op_info, "set register %01x to %02x", X, NN);
                     break;
 
                 case 0x7: // Set Vx = Vx + NN.
                     this->registers[X] += NN;
+                    sprintf(this->op_info, "add %02x to register %01x = %02x", NN, X, this->registers[X]);
                     break;
 
                 case 0x8: 
@@ -269,22 +282,27 @@ class chip8{
                     switch (N){
                         case 0x0: // Set Vx = Vy
                             this->registers[X] = this->registers[Y];
+                            sprintf(this->op_info, "set register %01x to register %01x", X, Y);
                             break;
 
                         case 0x1: // Binary OR
                             this->registers[X] = this->registers[X] | this->registers[Y];
+                            sprintf(this->op_info, "binary OR register %01x and register %01x", X, Y);
                             break;
                         
                         case 0x2: // Binary AND
                             this->registers[X] = this->registers[X] & this->registers[Y];
+                            sprintf(this->op_info, "binary AND register %01x and register %01x", X, Y);
                             break;
 
                         case 0x3: // Logical XOR
                             this->registers[X] = this->registers[X] ^ this->registers[Y];
+                            sprintf(this->op_info, "logican XOR register %01x and register %01x", X, Y);
                             break; 
 
                         case 0x4: // Add
                             this->registers[X] = this->registers[X] + this->registers[Y];
+                            sprintf(this->op_info, "add register %01x to register %01x", Y, X);
                             break; // finish this: does not handle overflow
 
                         case 0x5: // Subtract
@@ -295,6 +313,7 @@ class chip8{
                                 this->registers[0xF] = 0;
                             }
                             this->registers[X] = this->registers[X] - this->registers[Y];
+                            sprintf(this->op_info, "subtract register %01x from register %01x", Y, X);
                             break;
 
                         case 0x7: // Subtract
@@ -304,6 +323,7 @@ class chip8{
                             else{
                                 this->registers[0xF] = 0;
                             }
+                            sprintf(this->op_info, "subtract register %01x from register %01x", Y, X);
                             this->registers[X] = this->registers[Y] - this->registers[X];
                             break;
 
@@ -316,6 +336,7 @@ class chip8{
                                 this->registers[0xF] = 0;
                             }
                             this->registers[X] = this->registers[X] >> 1;
+                            sprintf(this->op_info, "Shift right register %01x", X);
                             break;
 
                         case 0xE: // Shift
@@ -327,6 +348,7 @@ class chip8{
                                 this->registers[0xF] = 0;
                             }
                             this->registers[X] = this->registers[X] << 1;
+                            sprintf(this->op_info, "Shift left register %01x", X);
                             break;
                     }
                     break;
@@ -335,23 +357,27 @@ class chip8{
                     if (this->registers[X] != this->registers[Y]){
                         this->program_counter += 2;
                     }
+                    sprintf(this->op_info, "Shift left register %01x", X);
                     break;
 
                 case 0xA: // Set I = nnn.
                     this->index_register = NNN;
-                    printf("idx set to %03x, %03x\n", this->index_register, NNN);
+                    sprintf(this->op_info,"idx set to %03x, %03x\n", this->index_register, NNN);
                     break;
 
                 case 0xB: // Jump to location nnn + V0.
                     this->program_counter = NNN + this->registers[0];
+                    sprintf(this->op_info, "jump to %03x", NNN + this->registers[0]);
                     break;
 
                 case 0xC: // Set Vx = random byte AND nn.
                     this->registers[X] = rand() && NN;
+                    sprintf(this->op_info, "set register %01x to random byte AND %03x", X, NNN);
                     break;
 
                 case 0xD: // Display n-byte sprite starting at memory location I at (Vx, Vy), set VF = collision.
                     draw(X,Y,N);
+                    sprintf(this->op_info, "draw %01x-byte sprite at %01x, %01x",N, X, Y);
                     break;
 
                 case 0xE:
@@ -362,6 +388,7 @@ class chip8{
                             
                             if(check_if_input_pressed(X)) {
                                 this->program_counter += 2;
+                                sprintf(this->op_info, "check if input %01x is pressed", X);
                             }
                             break;
 
@@ -369,6 +396,7 @@ class chip8{
                             printf("ExA1\n");
                             if (!(check_if_input_pressed(X))) {
                                 this->program_counter += 2;
+                                sprintf(this->op_info, "check if input %01x is not pressed", X);
                             }
                             break;
 
@@ -380,38 +408,39 @@ class chip8{
                     switch(NN){
                         case 0x07:
                         {
-                            printf("FX07\n");
+                            // printf("FX07\n");
                             this->registers[X] = this->delay_timer;
+                            sprintf(this->op_info, "set register %01x to delay timer value (%02x)", X, this->delay_timer);
                             break;
                         }
                         case 0x15:
                         {
-                            printf("FX15\n");
+                            // printf("FX15\n");
                             this->delay_timer = this->registers[X];
+                            sprintf(this->op_info, "set delay timer to register %01x value (%02x)", X, this->registers[X]);
                             break;
                         }
                         case 0x18:
                         {
-                            printf("FX18\n");
                             this->sound_timer = this->registers[X];
+                            sprintf(this->op_info, "set sound timer to register %01x value (%02x)", X, this->registers[X]);
                             break;
                         }
 
                         case 0x1E:
                         {
-                            printf("FX1E\n");
+                            // printf("FX1E\n");
                             if(this->index_register + this->registers[X] > 0xFFF)
                                 this->registers[0xF] = 1;
                             else
                                 this->registers[0xF] = 0;
                             this->index_register += this->registers[X];
-                            printf("set idx to %04x, %04x", this->index_register, this->registers[X]);
+                            sprintf(this->op_info, "add register %01x, (%02x) to idx (%04x)\n", X, this->registers[X], this->index_register);
                             break;
                             }
 
                         case 0x0A:
                         {
-                            printf("FX0A\n");
                             bool input_found = false;
                             for (int i = 0; i < 0xf; i++)
                             {
@@ -423,21 +452,25 @@ class chip8{
                             }
                             if (!(input_found))
                                 this->program_counter -= 2;
+
+                            sprintf(this->op_info, "wait for input");
                             break;
                         }
 
                         case 0x29:
                         {
-                            printf("FX28\n");
+                            // printf("FX28\n");
                             this->index_register = 80+(5*this->registers[X]);
+                            sprintf(this->op_info, "set index register to character %01x", this->registers[X]);
                             break;
                         }
 
                         case 0x33:
-                            printf("FX33\n");
+                            // printf("FX33\n");
                             this->memory[this->index_register] = this->registers[X] / 100;
                             this->memory[this->index_register + 1] = (this->registers[X] / 10) % 10;
                             this->memory[this->index_register + 2] = this->registers[X] % 10;
+                            sprintf(this->op_info, "binary-coded decimal conversion");
                             break;
 
                         case 0x55:
@@ -446,14 +479,16 @@ class chip8{
                             {
                                 this->memory[this->index_register + i] = this->registers[i];
                             }
+                            sprintf(this->op_info, "get memory");
                             break;
 
                         case 0x65:
-                            printf("Fx55\n");
+                            printf("Fx65\n");
                             for (int i = 0; i < X; i++)
                             {
                                 this->registers[i] = this->memory[this->index_register + i];
                             }
+                            sprintf(this->op_info, "set memory");
                             break;
 
                     default:
@@ -470,18 +505,16 @@ class chip8{
 
             if (delay_timer > 0)
             {
-                std::cout << delay_timer << std::endl;
                 delay_timer--;
             }
 
             if (sound_timer > 0)
             {
-                std::cout << sound_timer << std::endl;
                 std::cout << "Beep!" << std::endl;
                 sound_timer--;
             }
 
-            // int a = std::cin.get();
+            int a = std::cin.get();
             return op;
         }
 

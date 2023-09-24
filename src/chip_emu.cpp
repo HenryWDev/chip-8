@@ -103,11 +103,11 @@ void render_loop( GLFWwindow* window, chip8* chip_8){
 	ImGui::End();
 
 	ImGui::SetNextWindowPos(ImVec2(150,500));
-	ImGui::SetNextWindowSize(ImVec2(150,200));
+	ImGui::SetNextWindowSize(ImVec2(500,200));
 	ImGui::Begin( "OP's" );
 	ImGui::Text("-2:  %04x", chip_8->get_relative_instruction(-4));
 	ImGui::Text("-1:  %04x", chip_8->get_relative_instruction(-2));
-	ImGui::Text(" 0:  %04x", chip_8->get_relative_instruction(0));
+	ImGui::Text(" 0:  %04x, %s", chip_8->get_relative_instruction(0), chip_8->get_op_info());
 	ImGui::Text("+1:  %04x", chip_8->get_relative_instruction(2));
 	ImGui::Text("+2:  %04x", chip_8->get_relative_instruction(4));
 	ImGui::Text("+3:  %04x", chip_8->get_relative_instruction(6));
